@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FileText, FolderTree, Zap, Shield, TestTube, Target } from 'lucide-react';
-import { supabase, Project } from '../lib/supabase';
+import { storage, Project } from '../lib/storage';
 
 interface ProjectFormProps {
   project?: Project | null;
@@ -33,18 +33,15 @@ export default function ProjectForm({ project, onSave, onCancel }: ProjectFormPr
     success_criteria: project?.success_criteria || '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
       if (project) {
-        await supabase
-          .from('projects')
-          .update({ ...formData, updated_at: new Date().toISOString() })
-          .eq('id', project.id);
+        storage.updateProject(project.id, formData);
       } else {
-        await supabase.from('projects').insert([formData]);
+        storage.addProject(formData);
       }
       onSave();
     } catch (error) {

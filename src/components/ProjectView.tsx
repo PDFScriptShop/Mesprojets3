@@ -1,5 +1,5 @@
 import { CreditCard as Edit2, Trash2, ArrowLeft } from 'lucide-react';
-import { Project } from '../lib/supabase';
+import { Project } from '../lib/storage';
 import { renderMarkdown } from '../utils/markdown';
 
 interface ProjectViewProps {

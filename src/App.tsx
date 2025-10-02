@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase, Project } from './lib/supabase';
+import { storage, Project } from './lib/storage';
 import ProjectList from './components/ProjectList';
 import ProjectForm from './components/ProjectForm';
 import ProjectView from './components/ProjectView';
@@ -16,16 +16,14 @@ function App() {
     loadProjects();
   }, []);
 
-  const loadProjects = async () => {
+  const loadProjects = () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
+      const data = storage.getProjects();
+      const sorted = data.sort((a, b) =>
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+      setProjects(sorted);
     } catch (error) {
       console.error('Error loading projects:', error);
     } finally {
@@ -47,13 +45,13 @@ function App() {
     setViewMode('form');
   };
 
-  const handleDeleteProject = async () => {
+  const handleDeleteProject = () => {
     if (!selectedProject) return;
 
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
       try {
-        await supabase.from('projects').delete().eq('id', selectedProject.id);
-        await loadProjects();
+        storage.deleteProject(selectedProject.id);
+        loadProjects();
         setViewMode('list');
         setSelectedProject(null);
       } catch (error) {
@@ -62,8 +60,8 @@ function App() {
     }
   };
 
-  const handleSaveProject = async () => {
-    await loadProjects();
+  const handleSaveProject = () => {
+    loadProjects();
     setViewMode('list');
     setSelectedProject(null);
   };

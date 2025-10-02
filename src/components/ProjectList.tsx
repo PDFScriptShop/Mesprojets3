@@ -1,5 +1,5 @@
 import { Plus, FileText, Calendar } from 'lucide-react';
-import { Project } from '../lib/supabase';
+import { Project } from '../lib/storage';
 
 interface ProjectListProps {
   projects: Project[];
