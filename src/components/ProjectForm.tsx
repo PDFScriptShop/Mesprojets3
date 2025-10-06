@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, FolderTree, Zap, Shield, TestTube, Target } from 'lucide-react';
+import { FolderTree, Zap, Shield, TestTube, Target } from 'lucide-react';
 import { storage, Project } from '../lib/storage';
 
 interface ProjectFormProps {
@@ -33,15 +33,15 @@ export default function ProjectForm({ project, onSave, onCancel }: ProjectFormPr
     success_criteria: project?.success_criteria || '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
       if (project) {
-        storage.updateProject(project.id, formData);
+        await storage.updateProject(project.id, formData);
       } else {
-        storage.addProject(formData);
+        await storage.addProject(formData);
       }
       onSave();
     } catch (error) {

@@ -1,76 +1,104 @@
-export interface Project {
-  id: string;
-  title: string;
-  description: string;
-  objective: string;
-  structure: string;
-  features: string;
-  constraints: string;
-  testing: string;
-  success_criteria: string;
-  created_at: string;
-  updated_at: string;
-}
+import { supabase, Project } from './supabase';
 
-const STORAGE_KEY = 'projects';
+export type { Project };
 
 export const storage = {
-  getProjects: (): Project[] => {
+  getProjects: async (): Promise<Project[]> => {
     try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      return data ? JSON.parse(data) : [];
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching projects:', error);
+        return [];
+      }
+
+      return data || [];
     } catch (error) {
-      console.error('Error reading from localStorage:', error);
+      console.error('Error fetching projects:', error);
       return [];
     }
   },
 
-  saveProjects: (projects: Project[]): void => {
+  addProject: async (project: Omit<Project, 'id' | 'created_at' | 'updated_at'>): Promise<Project | null> => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([project])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding project:', error);
+        return null;
+      }
+
+      return data;
     } catch (error) {
-      console.error('Error saving to localStorage:', error);
+      console.error('Error adding project:', error);
+      return null;
     }
   },
 
-  addProject: (project: Omit<Project, 'id' | 'created_at' | 'updated_at'>): Project => {
-    const projects = storage.getProjects();
-    const now = new Date().toISOString();
-    const newProject: Project = {
-      ...project,
-      id: crypto.randomUUID(),
-      created_at: now,
-      updated_at: now,
-    };
-    projects.push(newProject);
-    storage.saveProjects(projects);
-    return newProject;
+  updateProject: async (id: string, updates: Partial<Omit<Project, 'id' | 'created_at' | 'updated_at'>>): Promise<Project | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating project:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error updating project:', error);
+      return null;
+    }
   },
 
-  updateProject: (id: string, updates: Partial<Project>): Project | null => {
-    const projects = storage.getProjects();
-    const index = projects.findIndex(p => p.id === id);
-    if (index === -1) return null;
+  deleteProject: async (id: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
 
-    projects[index] = {
-      ...projects[index],
-      ...updates,
-      updated_at: new Date().toISOString(),
-    };
-    storage.saveProjects(projects);
-    return projects[index];
+      if (error) {
+        console.error('Error deleting project:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      return false;
+    }
   },
 
-  deleteProject: (id: string): boolean => {
-    const projects = storage.getProjects();
-    const filtered = projects.filter(p => p.id !== id);
-    if (filtered.length === projects.length) return false;
-    storage.saveProjects(filtered);
-    return true;
-  },
+  getProjectById: async (id: string): Promise<Project | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
 
-  getProjectById: (id: string): Project | null => {
-    const projects = storage.getProjects();
-    return projects.find(p => p.id === id) || null;
+      if (error) {
+        console.error('Error fetching project:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      return null;
+    }
   },
 };
