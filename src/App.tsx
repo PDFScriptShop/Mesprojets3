@@ -16,11 +16,14 @@ function App() {
     loadProjects();
   }, []);
 
-  const loadProjects = async () => {
+  const loadProjects = () => {
     setLoading(true);
     try {
-      const data = await storage.getProjects();
-      setProjects(data);
+      const data = storage.getProjects();
+      const sorted = data.sort((a, b) =>
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      );
+      setProjects(sorted);
     } catch (error) {
       console.error('Error loading projects:', error);
     } finally {
@@ -42,13 +45,13 @@ function App() {
     setViewMode('form');
   };
 
-  const handleDeleteProject = async () => {
+  const handleDeleteProject = () => {
     if (!selectedProject) return;
 
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
       try {
-        await storage.deleteProject(selectedProject.id);
-        await loadProjects();
+        storage.deleteProject(selectedProject.id);
+        loadProjects();
         setViewMode('list');
         setSelectedProject(null);
       } catch (error) {

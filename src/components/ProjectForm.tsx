@@ -33,15 +33,15 @@ export default function ProjectForm({ project, onSave, onCancel }: ProjectFormPr
     success_criteria: project?.success_criteria || '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
       if (project) {
-        await storage.updateProject(project.id, formData);
+        storage.updateProject(project.id, formData);
       } else {
-        await storage.addProject(formData);
+        storage.addProject(formData);
       }
       onSave();
     } catch (error) {
